@@ -3,8 +3,6 @@ FC=ifort
 CXX=icc 
 
 
-tar -xzvf programs.tar.gz
-tar -xzvf example.tar.gz
 tar -xzvf xdrfile-1.1.4.tar.gz
 cd xdrfile-1.1.4
 CDIR=`pwd`
@@ -15,3 +13,5 @@ make
 make install
 
 cd ../xdr
+
+##
