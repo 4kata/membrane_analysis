@@ -13,15 +13,15 @@ type(xtcfile) :: xtc
 ! parameter
 integer, parameter :: ON = 1, UP = 1
 integer, parameter :: OFF = 0, DOWN = 0
-real*8, parameter :: bin = 0.1d0 
-real*8, parameter ::pi = dacos(-1d0)
+real*8, parameter  :: bin = 0.1d0 
+real*8, parameter  :: pi = dacos(-1d0)
 ! MDinfo
-integer :: nstep
-real*8 :: dt
-character(50) :: trjfile
+integer            :: nstep
+real*8             :: dt
+character(50)      :: trjfile
 ! MOLinfo
 type(MOL_atom),allocatable :: mol(:)
-character(5),allocatable :: order(:)
+character(5),allocatable   :: order(:)
 ! GRPinfo
 type(group_atom) :: grp(2)
 type(group_atom), allocatable :: grp_a(:)
@@ -36,7 +36,7 @@ integer*8, allocatable :: hb_count(:)
 integer ::leaf
 ! others
 integer :: i, j, k, l
-integer :: nhist, ig, flag, id, id_min
+integer :: nhist, ig,ig2, flag, id, id_min
 integer :: id_1, id_2
 integer :: step, num, npos_c, npos_d
 real*8 :: z, r_max, dv, v(2)
@@ -139,7 +139,7 @@ do step = 1,nstep + 1
     id_leaf(n_leaf(leaf),leaf) = id
   end do
 !$omp parallel shared(pos,npos_d,box_dim,nhist,list_d,list_a,id_leaf,id_h,posg,n_leaf,ncite) &
-!$omp & private(j,k,id_1,id_2,ig,newpos,leaf) &
+!$omp & private(j,k,id_1,id_2,ig,ig2,newpos,leaf) &
 !$omp & reduction(+:g, hb_count)
 !$omp do  
   do i = 1, npos_d
@@ -155,6 +155,7 @@ do step = 1,nstep + 1
       do j = 1, size(list_a)
         id_2 = list_a(j)
         k = check_hbond(pos,id_1,id_2,id_h,ncite,box_dim)
+        
         hb_count(ig) = hb_count(ig) + k
       end do
       ! water
@@ -165,8 +166,8 @@ do step = 1,nstep + 1
           hb_count(ig) = hb_count(ig) + 1
           call z_change(pos(1:3,id_2), box_dim(3), posg, newpos)
           call check_leaf(newpos(3),leaf)
-          ig = get_bin(bin,pos,newpos(3),id_2,id_leaf,n_leaf(leaf),leaf)
-          hb_count(ig) = hb_count(ig) + 1
+          ig2 = get_bin(bin,pos,newpos(3),id_2,id_leaf,n_leaf(leaf),leaf)
+          hb_count(ig2) = hb_count(ig2) + 1
         end if
       end do
   end do
@@ -189,7 +190,7 @@ print*, hb_count(-nhist-100)
 dv = sum_box(1)*sum_box(2)*bin
 open(15,file=outfile)
 do i = -ceiling(box_dim(3)/4d0/bin), ceiling(box_dim(3)/4d0/bin)
-  if ( g(i) /= 0 ) then
+  if ( g(i) /= 0 .and. hb_count(i)/=0) then
     write(15,'(f15.8,f20.15)') dble(i)*bin, dble(hb_count(i))/(dble(g(i)))
   end if
 end do
@@ -204,48 +205,7 @@ print *, '*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*+*'
 
 contains
 
-subroutine z_change(pos, box_dim, posg, newpos)
-  implicit none
-  real, intent(in) :: box_dim
-  real*8, intent(in) :: pos(3), posg
-  real*8, intent(out) :: newpos(3)
-  real*8 :: z
 
-  newpos(:)= pos(:)
-  z = pos(3) !- box_dim(3)*nint(pos(3, posatm)/box_dim(3))
-  if ( z < 0 ) z = z + box_dim
-
-  if ( posg >= box_dim/2d0 ) then
-    if ( abs(z) > box_dim) z = z - box_dim*nint(z/box_dim)
-    z = z - posg
-    if ( abs(z) > box_dim/2d0 ) z = z + box_dim
-  else
-    if ( abs(z) > box_dim) then
-      z = z - box_dim*nint(z/box_dim)
-    end if
-    z = z - posg
-    if ( abs(z) > box_dim/2d0 ) then 
-      z = z - box_dim
-    end if
-  end if
-
-  !z = abs(z)
-  newpos(3) = z
-endsubroutine z_change
-
-
-subroutine check_leaf(pos, leaf)
-  implicit none
-  real*8, intent(in) :: pos
-  integer,intent(out) :: leaf
-  integer, parameter :: DOWN=0, UP=1
-
-  if ( pos < 0d0 ) then 
-    leaf = DOWN
-  else
-    leaf = UP
-  end if
-end subroutine check_leaf
 
 integer function check_hbond(pos,id_1,id_2,id_h,ncite,box_dim)
   implicit none

@@ -1,8 +1,9 @@
 #!/bin/bash
-FC=ifort
-CXX=icc
+FC=ifort 
+CXX=icc 
 
-cd ../
+zip example.zip
+zip program.zip
 tar -xzvf xdrfile-1.1.4.tar.gz
 cd xdrfile-1.1.4
 CDIR=`pwd`

@@ -1,0 +1,7 @@
+3
+[ water ] ! order_of_gro resneme natoms nmol
+3 TIP3 3 22200 NOT
+[ lipid ]
+1 DPPC 130 200 COM
+[ cholesterol ]
+2 CHL1 74 22 COM

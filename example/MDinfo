@@ -1,0 +1,6 @@
+&system_info
+nojumpfile = "md.xtc" ! nojumpfile = wrapfile in this version
+wrapfile = "md.xtc"
+nstep = 500 ! 10 ps ### max 500 = 10 ps
+dt = 0.02 ! ps
+/
